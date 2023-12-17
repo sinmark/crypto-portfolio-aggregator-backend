@@ -1,15 +1,14 @@
-use crate::models::account_balance;
-use crate::models::asset::Asset;
+use crate::models;
 use anyhow::{anyhow, Result};
 use hmac_sha256::HMAC;
 use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
 use serde::Deserialize;
 use std::{time::SystemTime, time::UNIX_EPOCH};
 
-pub async fn get_account_balance(
+pub async fn get_portfolio(
     api_key: &str,
     secret_key: &str,
-) -> Result<account_balance::AccountBalance> {
+) -> Result<models::portfolio::Portfolio> {
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("Time went backwards")
@@ -61,38 +60,27 @@ struct AssetBalance {
     locked: String,
 }
 
-impl From<AccountBalance> for account_balance::AccountBalance {
-    fn from(
-        account_balance: AccountBalance,
-    ) -> account_balance::AccountBalance {
-        account_balance::AccountBalance {
-            balances: account_balance.balances.iter().map(Into::into).collect(),
+impl From<AccountBalance> for models::portfolio::Portfolio {
+    fn from(account_balance: AccountBalance) -> models::portfolio::Portfolio {
+        models::portfolio::Portfolio {
+            source: "binance".to_string(),
+            asset_balances: account_balance
+                .balances
+                .iter()
+                .map(Into::into)
+                .collect(),
         }
     }
 }
 
-impl From<&AssetBalance> for account_balance::AssetBalance {
-    fn from(asset_balance: &AssetBalance) -> account_balance::AssetBalance {
-        account_balance::AssetBalance {
-            asset: binance_asset_string_to_standardized_asset_struct(
-                &asset_balance.asset,
-            ),
+impl From<&AssetBalance> for models::asset_balance::AssetBalance {
+    fn from(
+        asset_balance: &AssetBalance,
+    ) -> models::asset_balance::AssetBalance {
+        models::asset_balance::AssetBalance {
+            asset: asset_balance.asset.clone(),
             amount: asset_balance.free.parse::<f64>().unwrap_or(0.0)
                 + asset_balance.locked.parse::<f64>().unwrap_or(0.0),
         }
-    }
-}
-
-fn binance_asset_string_to_standardized_asset_struct(asset: &str) -> Asset {
-    match asset {
-        "ADA" => Asset::Ada,
-        "DOT" => Asset::Dot,
-        "ETH" => Asset::Eth,
-        "BTC" => Asset::Btc,
-        "USDT" => Asset::Usdt,
-        "BNB" => Asset::Bnb,
-        "XRP" => Asset::Xrp,
-        "LTC" => Asset::Ltc,
-        _ => Asset::Uknown(asset.to_string()),
     }
 }

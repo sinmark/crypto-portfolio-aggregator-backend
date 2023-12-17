@@ -1,4 +1,4 @@
-use crate::models::account_balance::AccountBalance;
+use crate::models::portfolio::Portfolio;
 use crate::services::binance;
 use anyhow::Result;
 
@@ -8,12 +8,12 @@ pub enum Exchange {
 }
 
 impl Exchange {
-    pub async fn get_account_balance(&self) -> Result<AccountBalance> {
+    pub async fn get_portfolio(&self) -> Result<Portfolio> {
         match self {
             Exchange::Binance {
                 api_key,
                 secret_key,
-            } => binance::get_account_balance(api_key, secret_key).await,
+            } => binance::get_portfolio(api_key, secret_key).await,
         }
     }
 }
