@@ -1,20 +1,31 @@
 # About
 
 This project is about aggregating your crypto portfolios from various sources,
-like different exchanges, different blockchain wallets and manual asset
-insertions. The project is written as a backend server so that in the future it
-can easily have multiple frontends, like a web app, desktop app or whatever else
-you would like to use.
+like different exchanges, different blockchain wallets and manual insertions.
+Currently only centralized exchanges are supported. To get your portfolio data
+for binance you need to create a configuration file with your api key and secret
+key.
 
 # Security
 
-This project is meant strictly for personal use, and is not meant as a SaaS,
-only as a server that is going to be run locally and that is going to be
-targeted with a local frontend.
+This project is meant strictly for personal use. It is built as a server so that
+people can build their own frontends with the data the server offers. As
+everything is local how safe it is really depends on the safety of your local
+machine. But in any case your assets can't be withdrawn, only used (if you use
+an API key with a small enough permission policy).
 
 # How to use
 
-You will start up the server, but before doing that you will provide it with
-configuration (where to find your portfolios), start up a local frontend which
-targets this server, and that is about it, you will be able to see your
-portfolio.
+1. Create portfoliosources.toml file which will contain configuration for all of
+   your portfolio sources
+2. Start the server by running cargo run
+3. Use a frontend which targets the server to get the aggregated portfolio
+
+# Example of portfoliosources.toml configuration file
+
+```
+[[exchanges]] 
+name = "binance" 
+api_key = "your_api_key" 
+secret_key = "your_secret_key"
+```
