@@ -7,6 +7,7 @@ use config::{Config, Environment, File};
 use dotenvy::dotenv;
 use handlers::account_balance::account_balance;
 use serde::Deserialize;
+use services::exchange::Exchange;
 
 #[derive(Deserialize, Debug)]
 struct ServerConfiguration {
@@ -40,7 +41,19 @@ async fn main() {
         .unwrap();
     let portfolio_sources_config: PortfolioSourcesConfiguration =
         portfolio_sources_config_.try_deserialize().unwrap();
-    println!("What was read: {:?}", portfolio_sources_config.exchanges);
+
+    let mut exchanges: Vec<Exchange> = Vec::new();
+    for exchange_config in &portfolio_sources_config.exchanges {
+        match exchange_config.name.as_str() {
+            "binance" => {
+                exchanges.push(Exchange::Binance {
+                    api_key: (exchange_config.api_key.clone()),
+                    secret_key: (exchange_config.secret_key.clone()),
+                });
+            }
+            _ => println!("Exchange {} not supported!", exchange_config.name),
+        }
+    }
 
     let app = Router::new().route("/", get(account_balance));
     let listener = tokio::net::TcpListener::bind(server_config.server_addr)

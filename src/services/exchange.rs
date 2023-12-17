@@ -2,6 +2,7 @@ use crate::models::account_balance::AccountBalance;
 use crate::services::binance;
 use anyhow::Result;
 
+#[derive(Debug)]
 pub enum Exchange {
     Binance { api_key: String, secret_key: String },
 }
