@@ -5,9 +5,10 @@ mod services;
 use axum::{routing::get, Router};
 use config::{Config, Environment, File};
 use dotenvy::dotenv;
-use handlers::account_balance::account_balance;
+use handlers::account_balance::{account_balance, PortfolioSources};
 use serde::Deserialize;
 use services::exchange::Exchange;
+use std::sync::Arc;
 
 #[derive(Deserialize, Debug)]
 struct ServerConfiguration {
@@ -55,7 +56,11 @@ async fn main() {
         }
     }
 
-    let app = Router::new().route("/", get(account_balance));
+    let shared_state = Arc::new(PortfolioSources { exchanges });
+
+    let app = Router::new()
+        .route("/", get(account_balance))
+        .with_state(shared_state);
     let listener = tokio::net::TcpListener::bind(server_config.server_addr)
         .await
         .unwrap();
