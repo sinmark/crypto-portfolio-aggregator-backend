@@ -1,10 +1,12 @@
+mod handlers;
 mod models;
 mod services;
 
+use axum::{routing::get, Router};
 use config::{Config, Environment};
 use dotenvy::dotenv;
+use handlers::account_balance::account_balance;
 use serde::Deserialize;
-use services::exchange::Exchange;
 
 #[derive(Deserialize)]
 struct Configuration {
@@ -19,16 +21,10 @@ async fn main() {
         .build()
         .unwrap();
     let config: Configuration = config_.try_deserialize().unwrap();
-    println!("Server address: {}", config.server_addr);
-    let api_key = "";
-    let secret_key = "";
-    let binance = Exchange::Binance {
-        api_key: api_key.to_string(),
-        secret_key: secret_key.to_string(),
-    };
 
-    match binance.get_account_balance().await {
-        Ok(account_info) => println!("{:?}", account_info),
-        Err(e) => eprintln!("Error: {}", e),
-    }
+    let app = Router::new().route("/", get(account_balance));
+    let listener = tokio::net::TcpListener::bind(config.server_addr)
+        .await
+        .unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
