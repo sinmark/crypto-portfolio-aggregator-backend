@@ -1,4 +1,4 @@
-use crate::models::portfolio::Portfolio;
+use crate::models::portfolios::PortfolioWithSource;
 use crate::services::binance;
 use anyhow::Result;
 
@@ -8,12 +8,17 @@ pub enum Exchange {
 }
 
 impl Exchange {
-    pub async fn get_portfolio(&self) -> Result<Portfolio> {
+    pub async fn get_portfolio(&self) -> Result<PortfolioWithSource> {
         match self {
             Exchange::Binance {
                 api_key,
                 secret_key,
-            } => binance::get_portfolio(api_key, secret_key).await,
+            } => binance::get_portfolio(api_key, secret_key).await.map(
+                |portfolio| PortfolioWithSource {
+                    source: "Binance".to_string(),
+                    portfolio,
+                },
+            ),
         }
     }
 }

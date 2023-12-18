@@ -63,12 +63,7 @@ struct AssetBalance {
 impl From<AccountBalance> for models::portfolio::Portfolio {
     fn from(account_balance: AccountBalance) -> models::portfolio::Portfolio {
         models::portfolio::Portfolio {
-            source: "binance".to_string(),
-            asset_balances: account_balance
-                .balances
-                .iter()
-                .map(Into::into)
-                .collect(),
+            balances: account_balance.balances.iter().map(Into::into).collect(),
         }
     }
 }
