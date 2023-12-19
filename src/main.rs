@@ -19,7 +19,7 @@ struct ServerConfiguration {
 #[derive(Deserialize, Debug)]
 struct ExchangeConfiguration {
     pub name: String,
-    pub api_key: String,
+    pub public_key: String,
     pub secret_key: String,
 }
 
@@ -47,12 +47,14 @@ async fn main() {
     let mut exchanges: Vec<Exchange> = Vec::new();
     for exchange_config in &portfolio_sources_config.exchanges {
         match exchange_config.name.as_str() {
-            "binance" => {
-                exchanges.push(Exchange::Binance {
-                    api_key: (exchange_config.api_key.clone()),
-                    secret_key: (exchange_config.secret_key.clone()),
-                });
-            }
+            "binance" => exchanges.push(Exchange::Binance {
+                api_key: exchange_config.public_key.clone(),
+                secret_key: exchange_config.secret_key.clone(),
+            }),
+            "kraken" => exchanges.push(Exchange::Kraken {
+                public_key: exchange_config.public_key.clone(),
+                secret_key: exchange_config.secret_key.clone(),
+            }),
             _ => println!("Exchange {} not supported!", exchange_config.name),
         }
     }
