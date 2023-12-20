@@ -15,9 +15,9 @@ pub async fn get_portfolio(
         .as_millis()
         .to_string();
 
-    let query_string = format!("timestamp={}", timestamp);
+    let timestamp_query_parameter = format!("timestamp={}", timestamp);
     let byte_array_signature =
-        HMAC::mac(query_string.as_bytes(), secret_key.as_bytes());
+        HMAC::mac(timestamp_query_parameter.as_bytes(), secret_key.as_bytes());
     let hex_signature: String = byte_array_signature
         .iter()
         .map(|byte| format!("{:02x}", byte))
@@ -25,17 +25,18 @@ pub async fn get_portfolio(
 
     let url = format!(
         "https://testnet.binance.vision/api/v3/account?{}&signature={}",
-        query_string, hex_signature
+        timestamp_query_parameter, hex_signature
     );
 
-    let mut headers = HeaderMap::new();
-    let api_key_header = HeaderValue::from_str(api_key)
+    let mut request_headers = HeaderMap::new();
+    let api_key_header_value = HeaderValue::from_str(api_key)
         .map_err(|e| anyhow!("Header parse error: {}", e))?;
-    headers.insert("X-MBX-APIKEY", api_key_header);
-    headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+    request_headers.insert("X-MBX-APIKEY", api_key_header_value);
+    request_headers
+        .insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
 
     let client = reqwest::Client::new();
-    let res = client.get(&url).headers(headers).send().await?;
+    let res = client.get(&url).headers(request_headers).send().await?;
     let body = res.text().await?;
     match serde_json::from_str::<AccountBalance>(&body) {
         Err(error) => Err(anyhow!(
