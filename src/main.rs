@@ -19,8 +19,8 @@ struct ServerConfiguration {
 #[derive(Deserialize, Debug)]
 struct ExchangeConfiguration {
     pub name: String,
-    pub public_key: String,
-    pub secret_key: String,
+    pub api_key: String,
+    pub private_key: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -48,12 +48,12 @@ async fn main() {
     for exchange_config in &portfolio_sources_config.exchanges {
         match exchange_config.name.as_str() {
             "binance" => exchanges.push(Exchange::Binance {
-                api_key: exchange_config.public_key.clone(),
-                secret_key: exchange_config.secret_key.clone(),
+                api_key: exchange_config.api_key.clone(),
+                private_key: exchange_config.private_key.clone(),
             }),
             "kraken" => exchanges.push(Exchange::Kraken {
-                public_key: exchange_config.public_key.clone(),
-                secret_key: exchange_config.secret_key.clone(),
+                api_key: exchange_config.api_key.clone(),
+                private_key: exchange_config.private_key.clone(),
             }),
             _ => println!("Exchange {} not supported!", exchange_config.name),
         }

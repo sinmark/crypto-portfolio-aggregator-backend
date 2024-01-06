@@ -8,11 +8,11 @@ use anyhow::Result;
 pub enum Exchange {
     Binance {
         api_key: String,
-        secret_key: String,
+        private_key: String,
     },
     Kraken {
-        public_key: String,
-        secret_key: String,
+        api_key: String,
+        private_key: String,
     },
 }
 
@@ -30,14 +30,14 @@ impl Exchange {
         match self {
             Exchange::Binance {
                 api_key,
-                secret_key,
-            } => binance::get_portfolio(api_key, secret_key).await.map(
+                private_key,
+            } => binance::get_portfolio(api_key, private_key).await.map(
                 |portfolio| portfolio.into_portfolio_with_source("binance"),
             ),
             Exchange::Kraken {
-                public_key,
-                secret_key,
-            } => kraken::get_portfolio(public_key, secret_key).await.map(
+                api_key,
+                private_key,
+            } => kraken::get_portfolio(api_key, private_key).await.map(
                 |portfolio| portfolio.into_portfolio_with_source("kraken"),
             ),
         }

@@ -7,7 +7,7 @@ use std::{time::SystemTime, time::UNIX_EPOCH};
 
 pub async fn get_portfolio(
     api_key: &str,
-    secret_key: &str,
+    private_key: &str,
 ) -> Result<models::portfolio::Portfolio> {
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -17,7 +17,7 @@ pub async fn get_portfolio(
 
     let timestamp_query_parameter = format!("timestamp={}", timestamp);
     let byte_array_signature =
-        HMAC::mac(timestamp_query_parameter.as_bytes(), secret_key.as_bytes());
+        HMAC::mac(timestamp_query_parameter.as_bytes(), private_key.as_bytes());
     let hex_signature: String = byte_array_signature
         .iter()
         .map(|byte| format!("{:02x}", byte))
