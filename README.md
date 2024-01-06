@@ -27,5 +27,10 @@ an API key with a small enough permission policy).
 [[exchanges]] 
 name = "binance" 
 api_key = "your_api_key" 
-secret_key = "your_secret_key"
+private_key = "your_private_key"
+
+[[exchanges]] 
+name = "kraken" 
+api_key = "your_api_key" 
+private_key = "your_private_key"
 ```
