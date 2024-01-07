@@ -17,32 +17,14 @@ pub async fn get_portfolio(
     private_key: &str,
 ) -> Result<Portfolio> {
     let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards")
+        .duration_since(UNIX_EPOCH)?
         .as_millis()
         .to_string();
 
-    let base64_decoded_private_key =
-        general_purpose::STANDARD.decode(private_key.as_bytes())?;
-
     let post_data = format!("nonce={}", &nonce);
 
-    let for_sha_256 = nonce + post_data.as_str();
-    let mut hasher = Sha256::new();
-    hasher.update(for_sha_256.as_bytes());
-    let hashed_value = hasher.finalize();
-
-    let mut message_vec = Vec::new();
-    message_vec.extend_from_slice(URL_PATH.as_bytes());
-    message_vec.extend_from_slice(&hashed_value);
-
-    type HmacSha512 = Hmac<Sha512>;
-    let mut mac =
-        HmacSha512::new_from_slice(base64_decoded_private_key.as_slice())?;
-    mac.update(message_vec.as_slice());
-    let bytes = mac.finalize().into_bytes();
-
-    let signature = general_purpose::STANDARD.encode(bytes);
+    let signature =
+        kraken_signature(nonce.as_str(), post_data.as_str(), private_key)?;
 
     let mut request_headers = HeaderMap::new();
     request_headers.append("API-Key", HeaderValue::from_str(api_key)?);
@@ -55,7 +37,6 @@ pub async fn get_portfolio(
     );
 
     let client = Client::new();
-
     let url = format!("https://api.kraken.com{}", URL_PATH);
     let res = client
         .post(url)
@@ -70,4 +51,30 @@ pub async fn get_portfolio(
     Ok(Portfolio {
         balances: Vec::new(),
     })
+}
+
+fn kraken_signature(
+    nonce: &str,
+    post_data: &str,
+    private_key: &str,
+) -> Result<String> {
+    let base64_decoded_private_key =
+        general_purpose::STANDARD.decode(private_key.as_bytes())?;
+
+    let sha256_input = format!("{}{}", nonce, post_data);
+    let mut hasher = Sha256::new();
+    hasher.update(sha256_input.as_bytes());
+    let digest = hasher.finalize();
+
+    let mut message = Vec::new();
+    message.extend_from_slice(URL_PATH.as_bytes());
+    message.extend_from_slice(&digest);
+
+    type HmacSha512 = Hmac<Sha512>;
+    let mut hmac =
+        HmacSha512::new_from_slice(base64_decoded_private_key.as_slice())?;
+    hmac.update(message.as_slice());
+    let signature_in_bytes = hmac.finalize().into_bytes();
+
+    Ok(general_purpose::STANDARD.encode(signature_in_bytes))
 }
