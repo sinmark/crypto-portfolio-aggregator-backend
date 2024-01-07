@@ -10,6 +10,8 @@ use reqwest::{
 use sha2::{Digest, Sha256, Sha512};
 use std::{time::SystemTime, time::UNIX_EPOCH};
 
+const URL_PATH: &str = "/0/private/Balance";
+
 pub async fn get_portfolio(
     api_key: &str,
     private_key: &str,
@@ -23,8 +25,6 @@ pub async fn get_portfolio(
     let base64_decoded_private_key =
         general_purpose::STANDARD.decode(private_key.as_bytes())?;
 
-    let url_path = "/0/private/Balance";
-
     let post_data = format!("nonce={}", &nonce);
 
     let for_sha_256 = nonce + post_data.as_str();
@@ -33,7 +33,7 @@ pub async fn get_portfolio(
     let hashed_value = hasher.finalize();
 
     let mut message_vec = Vec::new();
-    message_vec.extend_from_slice(url_path.as_bytes());
+    message_vec.extend_from_slice(URL_PATH.as_bytes());
     message_vec.extend_from_slice(&hashed_value);
 
     type HmacSha512 = Hmac<Sha512>;
@@ -56,7 +56,7 @@ pub async fn get_portfolio(
 
     let client = Client::new();
 
-    let url = format!("https://api.kraken.com{}", url_path);
+    let url = format!("https://api.kraken.com{}", URL_PATH);
     let res = client
         .post(url)
         .headers(request_headers)
