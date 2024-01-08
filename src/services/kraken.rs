@@ -1,14 +1,15 @@
-use crate::models::portfolio::Portfolio;
-use anyhow::Result;
-use base64;
+use crate::models::{asset_balance::AssetBalance, portfolio::Portfolio};
+use anyhow::{anyhow, Result};
 use base64::{engine::general_purpose, Engine as _};
 use hmac::{Hmac, Mac};
 use reqwest::{
     header::{HeaderMap, HeaderValue, CONTENT_TYPE},
     Client,
 };
+use serde::Deserialize;
+use serde_json;
 use sha2::{Digest, Sha256, Sha512};
-use std::{time::SystemTime, time::UNIX_EPOCH};
+use std::{collections::HashMap, time::SystemTime, time::UNIX_EPOCH};
 
 const URL_PATH: &str = "/0/private/Balance";
 
@@ -46,11 +47,15 @@ pub async fn get_portfolio(
         .await?;
 
     let body = res.text().await?;
-    println!("kraken response body: {}", body);
-
-    Ok(Portfolio {
-        balances: Vec::new(),
-    })
+    match serde_json::from_str::<ResponseModel>(&body) {
+        Err(error) => Err(anyhow!(
+            "Text that failed to be parsed: {}, the JSON parsing error: {}",
+            body,
+            error
+        )),
+        Ok(response_model) => Ok(response_model),
+    }
+    .map(Into::into)
 }
 
 fn kraken_signature(
@@ -77,4 +82,25 @@ fn kraken_signature(
     let signature_in_bytes = hmac.finalize().into_bytes();
 
     Ok(general_purpose::STANDARD.encode(signature_in_bytes))
+}
+
+#[derive(Deserialize, Debug)]
+struct ResponseModel {
+    error: Vec<String>,
+    result: HashMap<String, String>,
+}
+
+impl From<ResponseModel> for Portfolio {
+    fn from(response_model: ResponseModel) -> Portfolio {
+        Portfolio {
+            balances: response_model
+                .result
+                .into_iter()
+                .map(|(asset, amount)| AssetBalance {
+                    asset,
+                    amount: amount.parse::<f64>().unwrap_or(0.0),
+                })
+                .collect(),
+        }
+    }
 }
