@@ -86,6 +86,7 @@ fn kraken_signature(
 
 #[derive(Deserialize, Debug)]
 struct ResponseModel {
+    #[allow(dead_code)]
     error: Vec<String>,
     result: HashMap<String, String>,
 }
