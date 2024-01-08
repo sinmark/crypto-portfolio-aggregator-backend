@@ -1,42 +1,39 @@
 use crate::models;
 use anyhow::{anyhow, Result};
-use hmac_sha256::HMAC;
+use hmac::{Hmac, Mac};
 use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
 use serde::Deserialize;
+use sha2::Sha256;
 use std::{time::SystemTime, time::UNIX_EPOCH};
+
+const URL_PATH: &str = "/api/v3/account";
 
 pub async fn get_portfolio(
     api_key: &str,
     private_key: &str,
 ) -> Result<models::portfolio::Portfolio> {
     let timestamp = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards")
+        .duration_since(UNIX_EPOCH)?
         .as_millis()
         .to_string();
 
-    let timestamp_query_parameter = format!("timestamp={}", timestamp);
-    let byte_array_signature =
-        HMAC::mac(timestamp_query_parameter.as_bytes(), private_key.as_bytes());
-    let hex_signature: String = byte_array_signature
-        .iter()
-        .map(|byte| format!("{:02x}", byte))
-        .collect();
+    let payload = format!("timestamp={}", timestamp);
+
+    let signature = binance_signature(&payload, private_key)?;
 
     let url = format!(
-        "https://testnet.binance.vision/api/v3/account?{}&signature={}",
-        timestamp_query_parameter, hex_signature
+        "https://testnet.binance.vision{}?{}&signature={}",
+        URL_PATH, payload, signature
     );
 
     let mut request_headers = HeaderMap::new();
-    let api_key_header_value = HeaderValue::from_str(api_key)
-        .map_err(|e| anyhow!("Header parse error: {}", e))?;
-    request_headers.insert("X-MBX-APIKEY", api_key_header_value);
+    request_headers.append("X-MBX-APIKEY", HeaderValue::from_str(api_key)?);
     request_headers
-        .insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+        .append(CONTENT_TYPE, HeaderValue::from_static("application/json"));
 
     let client = reqwest::Client::new();
     let res = client.get(&url).headers(request_headers).send().await?;
+
     let body = res.text().await?;
     match serde_json::from_str::<AccountBalance>(&body) {
         Err(error) => Err(anyhow!(
@@ -47,6 +44,17 @@ pub async fn get_portfolio(
         Ok(account_balance) => Ok(account_balance),
     }
     .map(Into::into)
+}
+
+fn binance_signature(payload: &str, private_key: &str) -> Result<String> {
+    type HmacSha256 = Hmac<Sha256>;
+    let mut hmac = HmacSha256::new_from_slice(private_key.as_bytes())?;
+    hmac.update(payload.as_bytes());
+    let signature_in_bytes = hmac.finalize().into_bytes();
+
+    Ok(signature_in_bytes
+        .iter()
+        .fold(String::new(), |acc, &byte| acc + &format!("{:02x}", byte)))
 }
 
 #[derive(Debug, Deserialize)]
