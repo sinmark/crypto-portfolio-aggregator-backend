@@ -1,17 +1,19 @@
 # About
 
 This project is about aggregating your crypto portfolios from various sources,
-like different exchanges, different blockchain wallets and manual insertions.
-Currently only centralized exchanges are supported. To get your portfolio data
-for binance you need to create a configuration file with your api key and secret
-key.
+like different exchanges, different blockchain wallets and through manual
+insertions. Currently only centralized exchanges are supported. To get your
+portfolio data for a supported exchange you need to create a configuration file
+with your api key and secret key.
+
+Supported exchanges: Binance, Kraken
 
 # Security
 
 This project is meant strictly for personal use. It is built as a server so that
 people can build their own frontends with the data the server offers. As
 everything is local how safe it is really depends on the safety of your local
-machine. But in any case your assets can't be withdrawn, only used (if you use
+machine. But in any case your assets can't be withdrawn, only seen (if you use
 an API key with a small enough permission policy).
 
 # How to use
