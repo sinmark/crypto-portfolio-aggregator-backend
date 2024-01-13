@@ -2,31 +2,16 @@ mod handlers;
 mod models;
 mod services;
 
+use crate::models::configuration::{
+    PortfolioSourcesConfiguration, ServerConfiguration,
+};
 use axum::{routing::get, Router};
 use config::{Config, Environment, File};
 use dotenvy::dotenv;
 use handlers::portfolios::portfolios;
 use models::portfolio_sources::PortfolioSources;
-use serde::Deserialize;
 use services::exchange::Exchange;
 use std::sync::Arc;
-
-#[derive(Deserialize, Debug)]
-struct ServerConfiguration {
-    pub server_addr: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct ExchangeConfiguration {
-    pub name: String,
-    pub api_key: String,
-    pub private_key: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct PortfolioSourcesConfiguration {
-    exchanges: Vec<ExchangeConfiguration>,
-}
 
 #[tokio::main]
 async fn main() {
@@ -44,8 +29,25 @@ async fn main() {
     let portfolio_sources_config: PortfolioSourcesConfiguration =
         portfolio_sources_config_.try_deserialize().unwrap();
 
+    let exchanges =
+        portfolio_sources_configuration_to_exchanges(&portfolio_sources_config);
+
+    let state = Arc::new(PortfolioSources { exchanges });
+
+    let app = Router::new()
+        .route("/portfolios", get(portfolios))
+        .with_state(state);
+    let listener = tokio::net::TcpListener::bind(server_config.server_addr)
+        .await
+        .unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+
+fn portfolio_sources_configuration_to_exchanges(
+    config: &PortfolioSourcesConfiguration,
+) -> Vec<Exchange> {
     let mut exchanges: Vec<Exchange> = Vec::new();
-    for exchange_config in &portfolio_sources_config.exchanges {
+    for exchange_config in &config.exchanges {
         match exchange_config.name.as_str() {
             "binance" => exchanges.push(Exchange::Binance {
                 api_key: exchange_config.api_key.clone(),
@@ -58,14 +60,5 @@ async fn main() {
             _ => println!("Exchange {} not supported!", exchange_config.name),
         }
     }
-
-    let state = Arc::new(PortfolioSources { exchanges });
-
-    let app = Router::new()
-        .route("/portfolios", get(portfolios))
-        .with_state(state);
-    let listener = tokio::net::TcpListener::bind(server_config.server_addr)
-        .await
-        .unwrap();
-    axum::serve(listener, app).await.unwrap();
+    exchanges
 }

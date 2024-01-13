@@ -47,7 +47,7 @@ pub async fn get_portfolio(
         .await?;
 
     let body = res.text().await?;
-    match serde_json::from_str::<ResponseModel>(&body) {
+    match serde_json::from_str::<Response>(&body) {
         Err(error) => Err(anyhow!(
             "Text that failed to be parsed: {}, the JSON parsing error: {}",
             body,
@@ -85,14 +85,14 @@ fn kraken_signature(
 }
 
 #[derive(Deserialize, Debug)]
-struct ResponseModel {
+struct Response {
     #[allow(dead_code)]
     error: Vec<String>,
     result: HashMap<String, String>,
 }
 
-impl From<ResponseModel> for Portfolio {
-    fn from(response_model: ResponseModel) -> Portfolio {
+impl From<Response> for Portfolio {
+    fn from(response_model: Response) -> Portfolio {
         Portfolio {
             balances: response_model
                 .result
