@@ -1,6 +1,6 @@
 use crate::models::configuration::PortfolioSourcesConfiguration;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Exchange {
     Binance {
         api_key: String,
