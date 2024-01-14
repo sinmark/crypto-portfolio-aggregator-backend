@@ -11,6 +11,7 @@ axum = "0.7.2"
 base64 = "0.21.5"
 config = "0.13.4"
 dotenvy = "0.15.7"
+ethers = { version = "2.0.11", default-features = false }
 futures = "0.3.30"
 hmac = "0.12.1"
 hmac-sha256 = "1.1.7"
@@ -19,3 +20,4 @@ serde = { version = "1.0.193", features = ["derive"] }
 serde_json = "1.0.108"
 sha2 = "0.10.8"
 tokio = { version = "1.35.0", features = ["full"] }
+url = "2.5.0"
