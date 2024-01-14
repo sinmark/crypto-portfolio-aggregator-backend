@@ -35,6 +35,7 @@ async fn main() {
 
     let blockchains = Blockchains::from(&portfolio_sources_config);
 
+    // TODO: Add a reqwest client to the state, and use the same client across all services
     let state = Arc::new(PortfolioSources {
         exchanges,
         blockchains,

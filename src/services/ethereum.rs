@@ -9,6 +9,7 @@ use url::Url;
 
 const ALCHEMY_BASE_URL: &str = "https://eth-mainnet.g.alchemy.com/v2/";
 
+// TODO: change this to custom reqwest calls, as we want to use alchemy_getTokenBalances method to retrieve ERC20 token balances
 pub async fn get_portfolio(address_: &str, api_key: &str) -> Result<Portfolio> {
     let url = Url::parse(&format!("{}{}", ALCHEMY_BASE_URL, api_key))?;
     let client = reqwest::Client::new();
