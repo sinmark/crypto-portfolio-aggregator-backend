@@ -9,8 +9,7 @@ use axum::{routing::get, Router};
 use config::{Config, Environment, File};
 use dotenvy::dotenv;
 use handlers::portfolios::portfolios;
-use models::portfolio_sources::PortfolioSources;
-use services::exchange::Exchange;
+use models::{exchange::Exchanges, portfolio_sources::PortfolioSources};
 use std::sync::Arc;
 
 #[tokio::main]
@@ -29,8 +28,7 @@ async fn main() {
     let portfolio_sources_config: PortfolioSourcesConfiguration =
         portfolio_sources_config_.try_deserialize().unwrap();
 
-    let exchanges =
-        portfolio_sources_configuration_to_exchanges(&portfolio_sources_config);
+    let exchanges = Exchanges::from(&portfolio_sources_config);
 
     let state = Arc::new(PortfolioSources { exchanges });
 
@@ -41,24 +39,4 @@ async fn main() {
         .await
         .unwrap();
     axum::serve(listener, app).await.unwrap();
-}
-
-fn portfolio_sources_configuration_to_exchanges(
-    config: &PortfolioSourcesConfiguration,
-) -> Vec<Exchange> {
-    let mut exchanges: Vec<Exchange> = Vec::new();
-    for exchange_config in &config.exchanges {
-        match exchange_config.name.as_str() {
-            "binance" => exchanges.push(Exchange::Binance {
-                api_key: exchange_config.api_key.clone(),
-                private_key: exchange_config.private_key.clone(),
-            }),
-            "kraken" => exchanges.push(Exchange::Kraken {
-                api_key: exchange_config.api_key.clone(),
-                private_key: exchange_config.private_key.clone(),
-            }),
-            _ => println!("Exchange {} not supported!", exchange_config.name),
-        }
-    }
-    exchanges
 }

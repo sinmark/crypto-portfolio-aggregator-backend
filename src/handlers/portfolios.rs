@@ -1,7 +1,7 @@
 use axum::{extract::State, Json};
 
 use crate::{
-    models::portfolio_sources::PortfolioSources, models::portfolios::Portfolios,
+    models::portfolio::Portfolios, models::portfolio_sources::PortfolioSources,
 };
 use std::sync::Arc;
 

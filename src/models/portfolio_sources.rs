@@ -1,4 +1,4 @@
-use crate::services::exchange::Exchange;
+use crate::models::exchange::Exchange;
 
 #[derive(Debug)]
 pub struct PortfolioSources {

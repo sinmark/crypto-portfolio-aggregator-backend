@@ -18,8 +18,8 @@ an API key with a small enough permission policy).
 
 # How to use
 
-1. Create portfoliosources.toml file which will contain configuration for all of
-   your portfolio sources
+1. Create portfoliosources.toml file in the root directory which will contain
+   configuration for all of your portfolio sources
 2. Start the server by running cargo run
 3. Use a frontend which targets the server to get the aggregated portfolio
 
