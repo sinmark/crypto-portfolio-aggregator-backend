@@ -9,7 +9,10 @@ use axum::{routing::get, Router};
 use config::{Config, Environment, File};
 use dotenvy::dotenv;
 use handlers::portfolios::portfolios;
-use models::{exchange::Exchanges, portfolio_sources::PortfolioSources};
+use models::{
+    blockchain::Blockchains, exchange::Exchanges,
+    portfolio_sources::PortfolioSources,
+};
 use std::sync::Arc;
 
 #[tokio::main]
@@ -30,7 +33,12 @@ async fn main() {
 
     let exchanges = Exchanges::from(&portfolio_sources_config);
 
-    let state = Arc::new(PortfolioSources { exchanges });
+    let blockchains = Blockchains::from(&portfolio_sources_config);
+
+    let state = Arc::new(PortfolioSources {
+        exchanges,
+        blockchains,
+    });
 
     let app = Router::new()
         .route("/portfolios", get(portfolios))

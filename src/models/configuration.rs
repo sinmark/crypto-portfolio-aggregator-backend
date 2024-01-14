@@ -13,6 +13,14 @@ pub struct ExchangeConfiguration {
 }
 
 #[derive(Deserialize, Debug)]
+pub struct BlockchainConfiguration {
+    pub name: String,
+    pub address: String,
+    pub api_key: String,
+}
+
+#[derive(Deserialize, Debug)]
 pub struct PortfolioSourcesConfiguration {
     pub exchanges: Vec<ExchangeConfiguration>,
+    pub blockchains: Vec<BlockchainConfiguration>,
 }

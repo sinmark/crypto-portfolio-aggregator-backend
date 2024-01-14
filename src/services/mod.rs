@@ -1,3 +1,5 @@
-pub mod binance;
+mod binance;
+pub mod blockchain;
+mod ethereum;
 pub mod exchange;
-pub mod kraken;
+mod kraken;
