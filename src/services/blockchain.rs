@@ -1,5 +1,6 @@
 use crate::models::blockchain::Blockchain;
 use crate::models::portfolio::PortfolioWithSource;
+use crate::services::cardano;
 use crate::services::ethereum;
 use anyhow::Result;
 
@@ -13,6 +14,12 @@ impl Blockchain {
                     },
                 )
             }
+            Blockchain::Cardano {
+                address,
+                project_id,
+            } => cardano::get_portfolio(address, project_id).await.map(
+                |portfolio| portfolio.into_portfolio_with_source("cardano"),
+            ),
         }
     }
 }
