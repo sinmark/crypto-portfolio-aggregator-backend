@@ -10,8 +10,6 @@ use serde::Deserialize;
 use sha2::{Digest, Sha256, Sha512};
 use std::{collections::HashMap, time::SystemTime, time::UNIX_EPOCH};
 
-const URL_PATH: &str = "/0/private/Balance";
-
 pub async fn get_portfolio(
     api_key: &str,
     private_key: &str,
@@ -37,7 +35,7 @@ pub async fn get_portfolio(
     );
 
     let client = Client::new();
-    let url = format!("https://api.kraken.com{}", URL_PATH);
+    let url = format!("{}{}", KRAKEN_BASE_URL, URL_PATH);
     let res = client
         .post(url)
         .headers(request_headers)
@@ -46,16 +44,19 @@ pub async fn get_portfolio(
         .await?;
 
     let body = res.text().await?;
-    match serde_json::from_str::<Response>(&body) {
-        Err(error) => Err(anyhow!(
-            "Text that failed to be parsed: {}, the JSON parsing error: {}",
-            body,
-            error
-        )),
-        Ok(response_model) => Ok(response_model),
-    }
-    .map(Into::into)
+    serde_json::from_str::<KrakenResponse>(&body)
+        .map_err(|error| {
+            anyhow!(
+                "Text that failed to be parsed: {}, the JSON parsing error: {}",
+                body,
+                error
+            )
+        })
+        .map(Into::into)
 }
+
+const KRAKEN_BASE_URL: &str = "https://api.kraken.com";
+const URL_PATH: &str = "/0/private/Balance";
 
 fn kraken_signature(
     nonce: &str,
@@ -70,28 +71,25 @@ fn kraken_signature(
     hasher.update(sha256_input.as_bytes());
     let digest = hasher.finalize();
 
-    let mut message = Vec::new();
+    let mut message = Vec::with_capacity(URL_PATH.len() + digest.len());
     message.extend_from_slice(URL_PATH.as_bytes());
     message.extend_from_slice(&digest);
 
     type HmacSha512 = Hmac<Sha512>;
-    let mut hmac =
-        HmacSha512::new_from_slice(base64_decoded_private_key.as_slice())?;
-    hmac.update(message.as_slice());
+    let mut hmac = HmacSha512::new_from_slice(&base64_decoded_private_key)?;
+    hmac.update(&message);
     let signature_in_bytes = hmac.finalize().into_bytes();
 
     Ok(general_purpose::STANDARD.encode(signature_in_bytes))
 }
 
-#[derive(Deserialize, Debug)]
-struct Response {
-    #[allow(dead_code)]
-    error: Vec<String>,
+#[derive(Deserialize)]
+struct KrakenResponse {
     result: HashMap<String, String>,
 }
 
-impl From<Response> for Portfolio {
-    fn from(response_model: Response) -> Portfolio {
+impl From<KrakenResponse> for Portfolio {
+    fn from(response_model: KrakenResponse) -> Portfolio {
         Portfolio {
             balances: response_model
                 .result
