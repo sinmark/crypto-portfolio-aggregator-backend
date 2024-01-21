@@ -1,49 +1,70 @@
 use crate::models::{asset_balance::AssetBalance, portfolio::Portfolio};
 use anyhow::{anyhow, Result};
-use reqwest::{
-    header::{HeaderMap, HeaderValue},
-    Client,
-};
-use serde_json::Value;
-
-const BLOCKFROST_BASE_URL: &str =
-    "https://cardano-mainnet.blockfrost.io/api/v0/addresses/";
+use reqwest::Client;
+use serde::Deserialize;
 
 pub async fn get_portfolio(
     address: &str,
     project_id: &str,
 ) -> Result<Portfolio> {
-    let mut request_headers = HeaderMap::new();
-    request_headers.append("project_id", HeaderValue::from_str(project_id)?);
-
     let client = Client::new();
     let url = format!("{}{}", BLOCKFROST_BASE_URL, address);
-    let res = client.get(url).headers(request_headers).send().await?;
+
+    let res = client
+        .get(url)
+        .header("project_id", project_id)
+        .send()
+        .await?;
 
     let body = res.text().await?;
-    let lovelace_amount = match serde_json::from_str::<Value>(&body) {
+    let ada_amount = extract_ada_amount(match serde_json::from_str::<
+        BlockfrostResponse,
+    >(&body)
+    {
         Err(error) => Err(anyhow!(
             "Text that failed to be parsed: {}, the JSON parsing error: {}",
             body,
             error
         )),
-        Ok(value) => Ok(value),
-    }?["amount"][0]["quantity"]
-        .as_str()
-        .ok_or(anyhow!("Failed to retrieve ADA balance!"))?
-        .parse::<u64>()?;
+        Ok(response_model) => Ok(response_model),
+    }?)?;
     Ok(Portfolio {
         balances: vec![AssetBalance {
             asset: "ADA".to_string(),
-            amount: to_ada(lovelace_amount),
+            amount: ada_amount,
         }],
     })
 }
 
-fn to_ada(lovelace: u64) -> f64 {
-    let divisor = 1_000_000;
-    let ada_whole = (lovelace / divisor) as f64;
-    let ada_fractional = (lovelace % divisor) as f64 / divisor as f64;
+#[derive(Deserialize)]
+struct BlockfrostResponse {
+    amount: Vec<Amount>,
+}
 
-    ada_whole + ada_fractional
+#[derive(Deserialize)]
+struct Amount {
+    unit: String,
+    quantity: String,
+}
+
+fn extract_ada_amount(blockfrost_response: BlockfrostResponse) -> Result<f64> {
+    blockfrost_response
+        .amount
+        .iter()
+        .try_fold(0.0, |accumulator, amount| {
+            let ada = match amount.unit.as_str() {
+                "lovelace" => to_ada(amount.quantity.parse::<u64>()?),
+                "ada" => amount.quantity.parse::<f64>()?,
+                _ => return Err(anyhow!("Unsupported unit!")),
+            };
+            Ok(accumulator + ada)
+        })
+}
+
+const BLOCKFROST_BASE_URL: &str =
+    "https://cardano-mainnet.blockfrost.io/api/v0/addresses/";
+const LOVELACE_DIVISOR: u64 = 1_000_000;
+
+fn to_ada(lovelace: u64) -> f64 {
+    lovelace as f64 / LOVELACE_DIVISOR as f64
 }

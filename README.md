@@ -8,7 +8,7 @@ parameters are required by blockchains.
 
 Supported exchanges: Binance, Kraken
 
-Supported blockchains: Ethereum (Only ETH)
+Supported blockchains: Ethereum (Only ETH), Cardano (Only ADA)
 
 # Security
 
@@ -29,6 +29,8 @@ an API key with a small enough permission policy).
 For Ethereum an API key from [Alchemy](https://www.alchemy.com/) is required. In
 the future we might support more providers.
 
+For Cardano an API key from [Blockfrost](https://blockfrost.io/) is required.
+
 # Examples
 
 ## Example of portfoliosources.toml configuration file
@@ -48,6 +50,11 @@ private_key = "your_private_key"
 name = "ethereum"
 address = "your_eth_address"
 api_key = "your_alchemy_api_key"
+
+[[blockchains]]
+name = "cardano"
+address = "your_cardano_address"
+api_key = "your_blockfrost_api_key"
 ```
 
 ## Example of /portfolios endpoint response
