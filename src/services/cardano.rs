@@ -17,17 +17,15 @@ pub async fn get_portfolio(
         .await?;
 
     let body = res.text().await?;
-    let ada_amount = extract_ada_amount(match serde_json::from_str::<
-        BlockfrostResponse,
-    >(&body)
-    {
-        Err(error) => Err(anyhow!(
-            "Text that failed to be parsed: {}, the JSON parsing error: {}",
-            body,
-            error
-        )),
-        Ok(response_model) => Ok(response_model),
-    }?)?;
+    let ada_amount = extract_ada_amount(
+        serde_json::from_str::<BlockfrostResponse>(&body).map_err(|error| {
+            anyhow!(
+                "Text that failed to be parsed: {}, the JSON parsing error: {}",
+                body,
+                error
+            )
+        })?,
+    )?;
     Ok(Portfolio {
         balances: vec![AssetBalance {
             asset: "ADA".to_string(),
@@ -35,6 +33,10 @@ pub async fn get_portfolio(
         }],
     })
 }
+
+const BLOCKFROST_BASE_URL: &str =
+    "https://cardano-mainnet.blockfrost.io/api/v0/addresses/";
+const LOVELACE_DIVISOR: u64 = 1_000_000;
 
 #[derive(Deserialize)]
 struct BlockfrostResponse {
@@ -60,10 +62,6 @@ fn extract_ada_amount(blockfrost_response: BlockfrostResponse) -> Result<f64> {
             Ok(accumulator + ada)
         })
 }
-
-const BLOCKFROST_BASE_URL: &str =
-    "https://cardano-mainnet.blockfrost.io/api/v0/addresses/";
-const LOVELACE_DIVISOR: u64 = 1_000_000;
 
 fn to_ada(lovelace: u64) -> f64 {
     lovelace as f64 / LOVELACE_DIVISOR as f64

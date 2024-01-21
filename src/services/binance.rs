@@ -6,8 +6,6 @@ use serde::Deserialize;
 use sha2::Sha256;
 use std::{time::SystemTime, time::UNIX_EPOCH};
 
-const URL_PATH: &str = "/api/v3/account";
-
 pub async fn get_portfolio(
     api_key: &str,
     private_key: &str,
@@ -35,15 +33,29 @@ pub async fn get_portfolio(
     let res = client.get(&url).headers(request_headers).send().await?;
 
     let body = res.text().await?;
-    match serde_json::from_str::<AccountBalance>(&body) {
-        Err(error) => Err(anyhow!(
-            "Text that failed to be parsed: {}, the JSON parsing error: {}",
-            body,
-            error
-        )),
-        Ok(account_balance) => Ok(account_balance),
-    }
-    .map(Into::into)
+    serde_json::from_str::<AccountBalance>(&body)
+        .map_err(|error| {
+            anyhow!(
+                "Text that failed to be parsed: {}, the JSON parsing error: {}",
+                body,
+                error
+            )
+        })
+        .map(Into::into)
+}
+
+const URL_PATH: &str = "/api/v3/account";
+
+#[derive(Deserialize)]
+struct AccountBalance {
+    balances: Vec<AssetBalance>,
+}
+
+#[derive(Deserialize)]
+struct AssetBalance {
+    asset: String,
+    free: String,
+    locked: String,
 }
 
 fn binance_signature(payload: &str, private_key: &str) -> Result<String> {
@@ -52,21 +64,7 @@ fn binance_signature(payload: &str, private_key: &str) -> Result<String> {
     hmac.update(payload.as_bytes());
     let signature_in_bytes = hmac.finalize().into_bytes();
 
-    Ok(signature_in_bytes
-        .iter()
-        .fold(String::new(), |acc, &byte| acc + &format!("{:02x}", byte)))
-}
-
-#[derive(Debug, Deserialize)]
-struct AccountBalance {
-    balances: Vec<AssetBalance>,
-}
-
-#[derive(Debug, Deserialize)]
-struct AssetBalance {
-    asset: String,
-    free: String,
-    locked: String,
+    Ok(hex::encode(signature_in_bytes))
 }
 
 impl From<AccountBalance> for models::portfolio::Portfolio {

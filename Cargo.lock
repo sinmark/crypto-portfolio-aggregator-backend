@@ -498,6 +498,7 @@ dependencies = [
  "dotenvy",
  "ethers",
  "futures",
+ "hex",
  "hmac",
  "hmac-sha256",
  "reqwest",
