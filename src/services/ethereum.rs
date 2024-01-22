@@ -3,10 +3,7 @@ use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
 pub async fn get_portfolio(address: &str, api_key: &str) -> Result<Portfolio> {
-    let client = reqwest::Client::new();
-    let url = format!("{}{}", ALCHEMY_BASE_URL, api_key);
     let params = GetBalanceParams(address.to_string(), "latest".to_string());
-
     let request_body = serde_json::json!({
       "jsonrpc": "2.0",
       "method": "eth_getBalance",
@@ -14,13 +11,17 @@ pub async fn get_portfolio(address: &str, api_key: &str) -> Result<Portfolio> {
       "id": 1
     });
 
+    let url = format!("{}{}", ALCHEMY_BASE_URL, api_key);
+
+    let client = reqwest::Client::new();
     let body = client
-        .post(url)
+        .post(&url)
         .json(&request_body)
         .send()
         .await?
         .text()
         .await?;
+
     let res =
         serde_json::from_str::<GetBalanceResponse>(&body).map_err(|error| {
             anyhow!(
