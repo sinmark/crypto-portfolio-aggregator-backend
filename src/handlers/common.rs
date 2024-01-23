@@ -41,7 +41,8 @@ pub async fn get_portfolios(server_state: &ServerState) -> Portfolios {
         })
     });
 
-    let all_futures = exchange_futures.chain(blockchain_futures);
+    let mut all_futures: Vec<_> = exchange_futures.collect();
+    all_futures.extend(blockchain_futures);
 
     let results = join_all(all_futures).await;
 

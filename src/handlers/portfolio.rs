@@ -13,24 +13,21 @@ pub async fn portfolio(
 ) -> Json<Portfolio> {
     let portfolios = get_portfolios(&server_state_arc).await;
 
-    aggregate_portfolios(&portfolios).into()
+    aggregate_portfolios(portfolios).into()
 }
 
-fn aggregate_portfolios(portfolios: &Portfolios) -> Portfolio {
-    let mut asset_to_amount: HashMap<String, f64> = HashMap::new();
-    for portfolio_with_source in portfolios {
-        for balance in &portfolio_with_source.portfolio.balances {
-            *asset_to_amount.entry(balance.asset.clone()).or_insert(0.0) +=
-                balance.amount;
-        }
-    }
+fn aggregate_portfolios(portfolios: Portfolios) -> Portfolio {
+    let asset_to_amount = portfolios
+        .into_iter()
+        .flat_map(|p| p.portfolio.balances)
+        .fold(HashMap::new(), |mut acc, balance| {
+            *acc.entry(balance.asset).or_insert(0.0) += balance.amount;
+            acc
+        });
 
-    let balances: Vec<AssetBalance> = asset_to_amount
-        .iter()
-        .map(|(key, value)| AssetBalance {
-            asset: key.clone(),
-            amount: *value,
-        })
+    let balances = asset_to_amount
+        .into_iter()
+        .map(|(asset, amount)| AssetBalance { asset, amount })
         .collect();
 
     Portfolio { balances }
