@@ -38,7 +38,6 @@ async fn main() {
 
     let client = Client::new();
 
-    // TODO: Add a reqwest client to the state, and use the same client across all services
     let state = Arc::new(ServerState {
         portfolio_sources: PortfolioSources {
             exchanges,
