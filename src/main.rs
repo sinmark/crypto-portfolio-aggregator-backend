@@ -8,7 +8,7 @@ use crate::models::configuration::{
 use axum::{routing::get, Router};
 use config::{Config, Environment, File};
 use dotenvy::dotenv;
-use handlers::portfolios::portfolios;
+use handlers::{portfolio::portfolio, portfolios::portfolios};
 use models::{
     blockchain::Blockchains, exchange::Exchanges,
     portfolio_sources::PortfolioSources, server_state::ServerState,
@@ -48,6 +48,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/portfolios", get(portfolios))
+        .route("/portfolio", get(portfolio))
         .with_state(state);
     let listener = tokio::net::TcpListener::bind(server_config.server_addr)
         .await
