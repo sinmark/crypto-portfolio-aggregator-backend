@@ -11,8 +11,9 @@ use dotenvy::dotenv;
 use handlers::portfolios::portfolios;
 use models::{
     blockchain::Blockchains, exchange::Exchanges,
-    portfolio_sources::PortfolioSources,
+    portfolio_sources::PortfolioSources, server_state::ServerState,
 };
+use reqwest::Client;
 use std::sync::Arc;
 
 #[tokio::main]
@@ -35,10 +36,15 @@ async fn main() {
 
     let blockchains = Blockchains::from(&portfolio_sources_config);
 
+    let client = Client::new();
+
     // TODO: Add a reqwest client to the state, and use the same client across all services
-    let state = Arc::new(PortfolioSources {
-        exchanges,
-        blockchains,
+    let state = Arc::new(ServerState {
+        portfolio_sources: PortfolioSources {
+            exchanges,
+            blockchains,
+        },
+        client: Arc::new(client),
     });
 
     let app = Router::new()

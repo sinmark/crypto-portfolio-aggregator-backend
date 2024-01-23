@@ -1,8 +1,13 @@
 use crate::models::{asset_balance::AssetBalance, portfolio::Portfolio};
 use anyhow::{anyhow, Result};
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
-pub async fn get_portfolio(address: &str, api_key: &str) -> Result<Portfolio> {
+pub async fn get_portfolio(
+    address: &str,
+    api_key: &str,
+    client: &Client,
+) -> Result<Portfolio> {
     let params = GetBalanceParams(address.to_string(), "latest".to_string());
     let request_body = serde_json::json!({
       "jsonrpc": "2.0",
@@ -13,7 +18,6 @@ pub async fn get_portfolio(address: &str, api_key: &str) -> Result<Portfolio> {
 
     let url = format!("{}{}", ALCHEMY_BASE_URL, api_key);
 
-    let client = reqwest::Client::new();
     let body = client
         .post(&url)
         .json(&request_body)

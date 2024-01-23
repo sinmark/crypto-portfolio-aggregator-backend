@@ -1,7 +1,10 @@
 use crate::models;
 use anyhow::{anyhow, Result};
 use hmac::{Hmac, Mac};
-use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
+use reqwest::{
+    header::{HeaderMap, HeaderValue, CONTENT_TYPE},
+    Client,
+};
 use serde::Deserialize;
 use sha2::Sha256;
 use std::{time::SystemTime, time::UNIX_EPOCH};
@@ -9,6 +12,7 @@ use std::{time::SystemTime, time::UNIX_EPOCH};
 pub async fn get_portfolio(
     api_key: &str,
     private_key: &str,
+    client: &Client,
 ) -> Result<models::portfolio::Portfolio> {
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)?
@@ -29,7 +33,6 @@ pub async fn get_portfolio(
     request_headers
         .append(CONTENT_TYPE, HeaderValue::from_static("application/json"));
 
-    let client = reqwest::Client::new();
     let res = client.get(&url).headers(request_headers).send().await?;
 
     let body = res.text().await?;

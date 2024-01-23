@@ -13,6 +13,7 @@ use std::{collections::HashMap, time::SystemTime, time::UNIX_EPOCH};
 pub async fn get_portfolio(
     api_key: &str,
     private_key: &str,
+    client: &Client,
 ) -> Result<Portfolio> {
     let nonce = SystemTime::now()
         .duration_since(UNIX_EPOCH)?
@@ -34,7 +35,6 @@ pub async fn get_portfolio(
         ),
     );
 
-    let client = Client::new();
     let url = format!("{}{}", KRAKEN_BASE_URL, URL_PATH);
     let res = client
         .post(url)

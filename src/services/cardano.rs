@@ -6,8 +6,8 @@ use serde::Deserialize;
 pub async fn get_portfolio(
     address: &str,
     project_id: &str,
+    client: &Client,
 ) -> Result<Portfolio> {
-    let client = Client::new();
     let url = format!("{}{}", BLOCKFROST_BASE_URL, address);
 
     let res = client
