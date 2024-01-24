@@ -23,8 +23,11 @@ async fn main() {
         .add_source(Environment::default())
         .build()
         .unwrap();
-    let server_config: ServerConfiguration =
-        server_config_.try_deserialize().unwrap();
+    let server_config: ServerConfiguration = server_config_
+        .try_deserialize()
+        .unwrap_or(ServerConfiguration {
+            server_addr: "localhost:8080".to_string(),
+        });
     let portfolio_sources_config_ = Config::builder()
         .add_source(File::with_name("portfoliosources"))
         .build()
@@ -50,8 +53,9 @@ async fn main() {
         .route("/portfolios", get(portfolios))
         .route("/portfolio", get(portfolio))
         .with_state(state);
-    let listener = tokio::net::TcpListener::bind(server_config.server_addr)
+    let listener = tokio::net::TcpListener::bind(&server_config.server_addr)
         .await
         .unwrap();
+    println!("Server running on http://{}.", server_config.server_addr);
     axum::serve(listener, app).await.unwrap();
 }

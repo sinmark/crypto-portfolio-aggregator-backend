@@ -18,7 +18,8 @@ requires the ability to read the account balance.
 
 1. Create portfoliosources.toml file in the root directory which will contain
    configuration for all of your portfolio sources
-2. Start the server by running cargo run
+2. Start the server by running cargo run (you can create an .env file to specify
+   the port on which it should run, by default it runs on localhost:8080)
 3. Use a frontend which targets the server to get the aggregated portfolio (look
    in examples section for supported endpoints)
 
@@ -28,6 +29,12 @@ the future the project might support more providers.
 For Cardano an API key from [Blockfrost](https://blockfrost.io/) is required.
 
 # Examples
+
+## Example of .env file
+
+```
+SERVER_ADDR=localhost:8081
+```
 
 ## Example of portfoliosources.toml configuration file
 
