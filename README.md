@@ -1,33 +1,29 @@
 # About
 
-This project is about aggregating your crypto portfolios from various sources,
-like different exchanges, different blockchain wallets and through manual
-insertions. To get your portfolio data for a supported exchange you need to
-create a configuration file with your api key and secret key, different
-parameters are required by blockchains.
+Aggregates all of your crypto by looking at configured portfolio sources.
 
-Supported exchanges: Binance, Kraken
+Currently supported portfolio sources:
 
-Supported blockchains: Ethereum (Only ETH), Cardano (Only ADA)
+1. Centralized exchanges (Binance, Kraken)
+2. Blockchains (Ethereum, Cardano)
 
 # Security
 
-This project is meant strictly for personal use. It is built as a server so that
-people can build their own frontends with the data the server offers. As
-everything is local how safe it is really depends on the safety of your local
-machine. But in any case your assets can't be withdrawn, only seen (if you use
-an API key with a small enough permission policy).
+This project is meant strictly for personal use. It a server so you can build a
+local frontend for it which uses the data provided by the server. When creating
+an API key make sure to only give it reading permissions, as the project only
+requires the ability to read the account balance.
 
 # How to use
 
 1. Create portfoliosources.toml file in the root directory which will contain
    configuration for all of your portfolio sources
 2. Start the server by running cargo run
-3. Use a frontend which targets the server to get the aggregated portfolio
-   (currently supported endpoints: /portfolios)
+3. Use a frontend which targets the server to get the aggregated portfolio (look
+   in examples section for supported endpoints)
 
 For Ethereum an API key from [Alchemy](https://www.alchemy.com/) is required. In
-the future we might support more providers.
+the future the project might support more providers.
 
 For Cardano an API key from [Blockfrost](https://blockfrost.io/) is required.
 
@@ -57,31 +53,48 @@ address = "your_cardano_address"
 api_key = "your_blockfrost_api_key"
 ```
 
+## Example of /portfolio endpoint response
+
+```
+{
+  "balances": [
+    {
+      "asset": "ETH",
+      "amount": 107686.26657272835
+    },
+    {
+      "asset": "ADA",
+      "amount": 2
+    }
+  ]
+}
+```
+
 ## Example of /portfolios endpoint response
 
 ```
 [
-   {
-      "source":"kraken",
-      "portfolio":{
-         "balances":[
-            {
-               "asset":"ADA",
-               "amount":2.0
-            }
-         ]
-      }
-   },
-   {
-      "source":"ethereum",
-      "portfolio":{
-         "balances":[
-            {
-               "asset":"ETH",
-               "amount":107686.26657272835
-            }
-         ]
-      }
-   }
+  {
+    "source": "kraken",
+    "portfolio": {
+      "balances": [
+        {
+          "asset": "ADA",
+          "amount": 2
+        }
+      ]
+    }
+  },
+  {
+    "source": "ethereum",
+    "portfolio": {
+      "balances": [
+        {
+          "asset": "ETH",
+          "amount": 107686.26657272835
+        }
+      ]
+    }
+  }
 ]
 ```

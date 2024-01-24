@@ -8,7 +8,7 @@ pub async fn get_portfolio(
     project_id: &str,
     client: &Client,
 ) -> Result<Portfolio> {
-    let url = format!("{}{}", BLOCKFROST_BASE_URL, address);
+    let url = format!("{}addresses/{}", BLOCKFROST_BASE_URL, address);
 
     let res = client
         .get(url)
@@ -35,7 +35,7 @@ pub async fn get_portfolio(
 }
 
 const BLOCKFROST_BASE_URL: &str =
-    "https://cardano-mainnet.blockfrost.io/api/v0/addresses/";
+    "https://cardano-mainnet.blockfrost.io/api/v0/";
 const LOVELACE_DIVISOR: u64 = 1_000_000;
 
 #[derive(Deserialize)]

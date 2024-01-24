@@ -24,8 +24,8 @@ pub async fn get_portfolio(
     let signature = binance_signature(&payload, private_key)?;
 
     let url = format!(
-        "https://testnet.binance.vision{}?{}&signature={}",
-        URL_PATH, payload, signature
+        "{}{}?{}&signature={}",
+        BINANCE_BASE_URL, URL_PATH, payload, signature
     );
 
     let mut request_headers = HeaderMap::new();
@@ -47,7 +47,8 @@ pub async fn get_portfolio(
         .map(Into::into)
 }
 
-const URL_PATH: &str = "/api/v3/account";
+const BINANCE_BASE_URL: &str = "https://testnet.binance.vision/";
+const URL_PATH: &str = "api/v3/account";
 
 #[derive(Deserialize)]
 struct AccountBalance {
