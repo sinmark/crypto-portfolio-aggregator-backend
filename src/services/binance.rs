@@ -47,7 +47,7 @@ pub async fn get_portfolio(
         .map(Into::into)
 }
 
-const BINANCE_BASE_URL: &str = "https://testnet.binance.vision/";
+const BINANCE_BASE_URL: &str = "https://api.binance.com/";
 const URL_PATH: &str = "api/v3/account";
 
 #[derive(Deserialize)]
